@@ -118,7 +118,7 @@ struct Exp {
   std::string id_name;        // Id
   UnaryOp *un_op = nullptr;   // UnOp
   Exp *un_operand = nullptr;  // UnOp
-  Exp *bin_op = nullptr;      // BinOp
+  BinaryOp *bin_op = nullptr; // BinOp
   Exp *left_exp = nullptr;    // BinOp
   Exp *right_exp = nullptr;   // BinOp
   Exp *array_ptr = nullptr;   // ArrayAccess
@@ -208,62 +208,6 @@ struct Function {
   std::vector<Stmt> stmts;
 };
 
-/*
- * struct Stmt
- * Represents a statement in the program
- * This could be a break, continue, return, assignment, function vall, if
- * statement, or while loop
- * TODO: Figure out how to create these structs
- */
-struct Stmt {
-  enum class StmtKind { Break, Continue, Return, Assign, Call, If, While };
-  StmtKind kind;
-  std::optional<Exp> return_expression; // Return
-  Lval *left_hand_side = nullptr;       // Assign
-  Rhs *right_hand_side = nullptr;       // Assign
-  Lval *callLval = nullptr;             // Call
-  std::vector<Exp> call_arguments;      // Call
-  Exp *exp_guard = nullptr;             // While, If
-  std::vector<Stmt> true_vals;          // If
-  std::vector<Stmt> false_vals;         // If
-  std::vector<Stmt> while_body;         // While
-
-  // Break & Continue constructor
-  Stmt(std::string s) {
-    if (s == "Break") {
-      kind = StmtKind::Break;
-    } else if (s == "Continue") {
-      kind = StmtKind::Continue;
-    } else {
-      // shouldn't go here
-    }
-  }
-
-  // Return constructor (TODO: Check if an extra parameter is needed since this
-  // uses std::option)
-  Stmt(const std::optional<Exp> &exp)
-      : kind(StmtKind::Return), return_expression(new Exp(exp)) {}
-
-  // Assign constructor
-  Stmt(const Lval &lhs, const Rhs &rhs)
-      : kind(StmtKind::Assign), left_hand_side(new Lval(lhs)),
-        right_hand_side(new Rhs(rhs)) {}
-
-  // Call constructor
-  Stmt(Lval callee, std::vector<Exp> args)
-      : kind(StmtKind::Call), callLval(new Lval(callee)), call_arguments(args) {
-  }
-
-  // If constructor
-  Stmt(Exp guard, std::vector<Stmt> tt, std::vector<Stmt> ff)
-      : kind(StmtKind::If), exp_guard(new Exp(guard)), true_vals(tt),
-        false_vals(ff) {}
-
-  // While constructor; While { guard: Exp, body: vector<Stmt> }
-  Stmt(Exp guard, std::vector<Stmt> body)
-      : kind(StmtKind::While), exp_guard(new Exp(guard)), while_body(body) {}
-};
-
 struct Rhs {
   // Represents the right-hand side of an assignment or new expression.
   // It could be an expression or a new operation (for allocating memory).
@@ -280,7 +224,7 @@ struct Rhs {
   // New constructor
   Rhs(const Type &type, const Exp &amount)
       : kind(RhsKind::New), new_type(new Type(type)),
-        new_amount(new Exp(amount)), {}
+        new_amount(new Exp(amount)) {}
 };
 
 struct Lval {
@@ -301,7 +245,7 @@ struct Lval {
   Lval(std::string name) : kind(LvalKind::Id), id_name(name) {}
 
   // Deref constructor
-  Lval(Lval lval) : kind(LvalKind::Deref), deref_lval(new Lval(&lval)) {}
+  Lval(const Lval &lval) : kind(LvalKind::Deref), deref_lval(new Lval(lval)) {}
 
   // ArrayAccess constructor
   Lval(const Lval &ptr, const Exp &index)
@@ -312,6 +256,62 @@ struct Lval {
   Lval(const Lval &ptr, const std::string field)
       : kind(LvalKind::FieldAccess), field_ptr(new Lval(ptr)),
         acc_field(field) {}
+};
+/*
+ * struct Stmt
+ * Represents a statement in the program
+ * This could be a break, continue, return, assignment, function vall, if
+ * statement, or while loop
+ * TODO: Figure out how to create these structs
+ */
+struct Stmt {
+  enum class StmtKind { Break, Continue, Return, Assign, Call, If, While };
+  StmtKind kind;
+  std::optional<Exp> *return_expression; // Return
+  Lval *left_hand_side = nullptr;        // Assign
+  Rhs *right_hand_side = nullptr;        // Assign
+  Lval *callLval = nullptr;              // Call
+  std::vector<Exp> call_arguments;       // Call
+  Exp *exp_guard = nullptr;              // While, If
+  std::vector<Stmt> true_vals;           // If
+  std::vector<Stmt> false_vals;          // If
+  std::vector<Stmt> while_body;          // While
+
+  // Break & Continue constructor
+  Stmt(std::string s) {
+    if (s == "Break") {
+      kind = StmtKind::Break;
+    } else if (s == "Continue") {
+      kind = StmtKind::Continue;
+    } else {
+      // shouldn't go here
+    }
+  }
+
+  // Return constructor (TODO: Check if an extra parameter is needed since this
+  // uses std::option)
+  Stmt(const std::optional<Exp> &exp)
+      : kind(StmtKind::Return), return_expression(new std::optional<Exp>(exp)) {
+  }
+
+  // Assign constructor
+  Stmt(const Lval &lhs, const Rhs &rhs)
+      : kind(StmtKind::Assign), left_hand_side(new Lval(lhs)),
+        right_hand_side(new Rhs(rhs)) {}
+
+  // Call constructor
+  Stmt(Lval callee, std::vector<Exp> args)
+      : kind(StmtKind::Call), callLval(new Lval(callee)), call_arguments(args) {
+  }
+
+  // If constructor
+  Stmt(Exp guard, std::vector<Stmt> tt, std::vector<Stmt> ff)
+      : kind(StmtKind::If), exp_guard(new Exp(guard)), true_vals(tt),
+        false_vals(ff) {}
+
+  // While constructor; While { guard: Exp, body: vector<Stmt> }
+  Stmt(Exp guard, std::vector<Stmt> body)
+      : kind(StmtKind::While), exp_guard(new Exp(guard)), while_body(body) {}
 };
 
 // Used in struct definitions
