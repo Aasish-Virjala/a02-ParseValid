@@ -35,7 +35,7 @@ Struct (Completed)
 - locals: vector<(Decl, option<Exp>)>
 - stmts: vector<Stmt>
 
-Stmt (In progress)
+Stmt (Done)
 | Break
 | Continue
 | Return { exp: option<Exp> }

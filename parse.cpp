@@ -26,6 +26,26 @@ int main(int argc, char *argv[]) {
   // make a vector of strings with all the tokens. (input as out param)
   read_file(tokens, input_string);
 
+  // Initialize AST
+//   Program(
+//    globals = [],
+//    structs = [],
+//    externs = [],
+//    functions = []
+//  )
+
+  for (int i = 0; i < tokens.length(); i++){
+    token = tokens[i];
+    
+  }
+
+
+
+
+
+
+
+
   return 0;
 }
 

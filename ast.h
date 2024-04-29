@@ -34,26 +34,22 @@ struct Type {
   TypeKind kind;
   std::optional<std::string> struct_name;
   std::vector<Type> params;
-  Type *ret_type;
-  Type *pointed_to_type;
+  Type *ret_type = nullptr;
+  Type *pointed_to_type = nullptr;
 
   // Int constructor
-  Type() : kind(TypeKind::Int), ret_type(nullptr), pointed_to_type(nullptr) {}
+  Type() : kind(TypeKind::Int) {}
 
   // Struct constructor
-  Type(const StructId &name)
-      : kind(TypeKind::Struct), struct_name(name), ret_type(nullptr),
-        pointed_to_type(nullptr) {}
+  Type(const StructId &name) : kind(TypeKind::Struct), struct_name(name) {}
 
   // Fn constructor
   Type(const std::vector<Type> &params, const Type &ret_type)
-      : kind(TypeKind::Fn), params(params), ret_type(new Type(ret_type)),
-        pointed_to_type(nullptr) {}
+      : kind(TypeKind::Fn), params(params), ret_type(new Type(ret_type)) {}
 
   // Ptr constructor
   Type(const Type &pointed_to_type)
-      : kind(TypeKind::Ptr), pointed_to_type(new Type(pointed_to_type)),
-        ret_type(nullptr) {}
+      : kind(TypeKind::Ptr), pointed_to_type(new Type(pointed_to_type)) {}
 
   // Destructor for memory cleanup from new calls
   ~Type() {
@@ -119,37 +115,204 @@ struct Function {
 struct Stmt {
   enum class StmtKind { Break, Continue, Return, Assign, Call, If, While };
   StmtKind kind;
-  Exp *return_expression;
-  Lval *left_hand_side;
-  Rhs *right_hand_side;
-  Lval *callLval;
-  std::vector<Exp> call_arguments;
-  // Other contents Idk how do do
+  std::optional<Exp> *return_expression; // Return
+  Lval *left_hand_side = nullptr;        // Assign
+  Rhs *right_hand_side = nullptr;        // Assign
+  Lval *callLval = nullptr;              // Call
+  std::vector<Exp> call_arguments;       // Call
+  Exp *exp_guard = nullptr;              // While, If
+  std::vector<Stmt> true_vals;           // If
+  std::vector<Stmt> false_vals;          // If
+  std::vector<Stmt> while_body;          // While
+
+  // Break & Continue constructor
+  Stmt(std::string s) {
+    if (s == "Break") {
+      kind = StmtKind::Break;
+    } else if (s == "Continue") {
+      kind = StmtKind::Continue;
+    } else {
+      // shouldn't go here
+    }
+  }
+
+  // Return constructor (TODO: Check if an extra parameter is needed since this
+  // uses std::option)
+  Stmt(const std::optional<Exp> &exp)
+      : kind(StmtKind::Return), return_expression(new Exp(exp)) {}
+
+  // Assign constructor
+  Stmt(const Lval &lhs, const Rhs &rhs)
+      : kind(StmtKind::Assign), left_hand_side(new Lval(lhs)),
+        right_hand_side(new Rhs(rhs)) {}
+
+  // Call constructor
+  Stmt(Lval callee, std::vector<Exp> args)
+      : kind(StmtKind::Call), callLval(new Lval(callee)), call_arguments(args) {
+  }
+
+  // If constructor
+  Stmt(Exp guard, std::vector<Stmt> tt, std::vector<Stmt> ff)
+      : kind(StmtKind::If), exp_guard(new Exp(guard)), true_vals(tt),
+        false_vals(ff) {}
+
+  // While constructor; While { guard: Exp, body: vector<Stmt> }
+  Stmt(Exp guard, std::vector<Stmt> body)
+      : kind(StmtKind::While), exp_guard(new Exp(guard)), while_body(body) {}
 };
 
 struct Rhs {
   // Represents the right-hand side of an assignment or new expression.
   // It could be an expression or a new operation (for allocating memory).
+
+  enum class RhsKind { RhsExp, New };
+  RhsKind kind;
+  Exp *rhs_exp;
+  Type *new_type;
+  Exp *new_amount;
+
+  // RhsExp constructor
+  Rhs(const Exp &exp) : kind(RhsKind::RhsExp), rhs_exp(new Exp(exp)) {}
+
+  // New constructor
+  Rhs(const Type &type, const Exp &amount)
+      : kind(RhsKind::New), new_type(new Type(type)),
+        new_amount(new Exp(amount)), {}
 };
 
 struct Lval {
   // Represents the left-hand side of an assignment or a function call.
   // It could be an identifier, a dereference operation, an array access, or a
   // field access.
+
+  enum class LvalKind { Id, Deref, ArrayAccess, FieldAccess };
+  LvalKind kind;
+  std::string id_name;
+  Lval *deref_lval;
+  Lval *array_ptr;
+  Exp *array_index;
+  Lval *field_ptr;
+  std::string acc_field;
+
+  // Id constructor
+  Lval(std::string name) : kind(LvalKind::Id), id_name(name) {}
+
+  // Deref constructor
+  Lval(Lval lval) : kind(LvalKind::Deref), deref_lval(new Lval(&lval)) {}
+
+  // ArrayAccess constructor
+  Lval(const Lval &ptr, const Exp &index)
+      : kind(LvalKind::ArrayAccess), array_ptr(new Lval(ptr)),
+        array_index(new Exp(index)) {}
+
+  // FieldAccess constructor
+  Lval(const Lval &ptr, const std::string field)
+      : kind(LvalKind::FieldAccess), field_ptr(new Lval(ptr)),
+        acc_field(field) {}
 };
 
 struct Exp {
   // Represents an expression in the program.
   // This could be a number, identifier, nil, unary operation, binary operation,
   // array access, field access, or function call.
+  enum class ExpKind {
+    Num,
+    Id,
+    Nil,
+    UnOp,
+    BinOp,
+    ArrayAccess,
+    FieldAccess,
+    Call
+  };
+  ExpKind kind;
+
+  int32_t num_val;            // Num
+  std::string id_name;        // Id
+  UnaryOp *un_op = nullptr;   // UnOp
+  Exp *un_operand = nullptr;  // UnOp
+  Exp *bin_op = nullptr;      // BinOp
+  Exp *left_exp = nullptr;    // BinOp
+  Exp *right_exp = nullptr;   // BinOp
+  Exp *array_ptr = nullptr;   // ArrayAccess
+  Exp *array_exp = nullptr;   // ArrayAccess
+  Exp *field_ptr = nullptr;   // FieldAccess
+  std::string field_val;      // FieldAccess
+  Exp *call_callee = nullptr; // Call
+  std::vector<Exp> call_args; // Call
+
+  // Num constructor
+  Exp(const int32_t &n) : kind(ExpKind::Num), num_val(n){};
+
+  // Id constructor
+  Exp(const std::string &name) : kind(ExpKind::Id), id_name(name){};
+
+  // Nil constructor
+  Exp() : kind(ExpKind::Nil){};
+
+  // UnOp constructor
+  Exp(const UnaryOp &op, const Exp &operand)
+      : kind(ExpKind::UnOp), un_op(new UnaryOp(op)),
+        un_operand(new Exp(operand)){};
+
+  // BinOp constructor
+  Exp(const BinaryOp &op, const Exp &left, const Exp &right)
+      : kind(ExpKind::BinOp), bin_op(new BinaryOp(op)), left_exp(new Exp(left)),
+        right_exp(new Exp(right)){};
+
+  // ArrayAccess constructor
+  Exp(Exp ptr, Exp index)
+      : kind(ExpKind::ArrayAccess), array_ptr(new Exp(ptr)),
+        array_exp(new Exp(index)){};
+
+  // FieldAccess constructor
+  Exp(Exp ptr, std::string field)
+      : kind(ExpKind::FieldAccess), field_ptr(new Exp(ptr)), field_val(field){};
+
+  // Call constructor
+  Exp(Exp callee, std::vector<Exp> args)
+      : kind(ExpKind::Call), call_callee(new Exp(callee)), call_args(args){};
 };
 
 struct UnaryOp {
   // Represents a unary operation (e.g., negation, dereference).
+  enum class UnOpKind { Neg, Deref };
+  UnOpKind kind;
+
+  UnaryOp(const UnaryOp &s) : kind(s.kind){};
+  UnaryOp(const std::string &s) : kind(UnOpKind::Neg){};
 };
 
+/*
+ *
+ */
 struct BinaryOp {
-  // Represents a binary operation (e.g., addition, subtraction, comparison).
+  enum class BinOpKind { Add, Sub, Mul, Div, Equal, NotEq, Lt, Lte, Gt, Gte };
+  BinOpKind kind;
+
+  BinaryOp(std::string s) {
+    if (s == "Add") {
+      kind = BinOpKind::Add;
+    } else if (s == "Sub") {
+      kind = BinOpKind::Sub;
+    } else if (s == "Mul") {
+      kind = BinOpKind::Mul;
+    } else if (s == "Div") {
+      kind = BinOpKind::Div;
+    } else if (s == "Equal") {
+      kind = BinOpKind::Equal;
+    } else if (s == "NotEq") {
+      kind = BinOpKind::NotEq;
+    } else if (s == "Lt") {
+      kind = BinOpKind::Lt;
+    } else if (s == "Lte") {
+      kind = BinOpKind::Lte;
+    } else if (s == "Gt") {
+      kind = BinOpKind::Gt;
+    } else if (s == "Gte") {
+      kind = BinOpKind::Gte;
+    }
+  };
 };
 
 // Used in struct definitions
