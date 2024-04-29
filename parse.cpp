@@ -5,8 +5,9 @@
 
 using namespace std;
 
-void read_file(vector<string> &tokensOut, string input_string);
-void create_tokens(vector<Token> &tokenizedTokens, vector<string> tokens);
+std::vector<std::string> tokens;
+
+void read_file(string input_string);
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -22,29 +23,18 @@ int main(int argc, char *argv[]) {
 
   std::string input_string((std::istreambuf_iterator<char>(source)),
                            std::istreambuf_iterator<char>());
-  vector<string> tokens;
   // make a vector of strings with all the tokens. (input as out param)
-  read_file(tokens, input_string);
+  read_file(input_string);
 
-  // Initialize AST
-//   Program(
-//    globals = [],
-//    structs = [],
-//    externs = [],
-//    functions = []
-//  )
+  // return parse error code
+  int error = NO_ERR;
+  error = create_ast();
 
-  for (int i = 0; i < tokens.length(); i++){
-    token = tokens[i];
-    
+  // Catches any parse errors
+  if (error != NO_ERR) {
+    std::cout << "parse error at token " << to_string(error);
+    return 0;
   }
-
-
-
-
-
-
-
 
   return 0;
 }
@@ -58,11 +48,11 @@ int main(int argc, char *argv[]) {
  * @param input out parameter, store all tokens into this vector
  * @param input_string file input as a string that holds the tokens
  */
-void read_file(vector<string> &tokensOut, string input_string) {
+void read_file(string input_string) {
   string currentString = "";
   for (auto curr_char : input_string) {
     if (curr_char == '\n') {
-      tokensOut.push_back(currentString);
+      tokens.push_back(currentString);
       currentString = "";
     } else {
       currentString += curr_char;

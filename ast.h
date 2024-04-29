@@ -1,10 +1,16 @@
 #ifndef AST_H
 #define AST_H
 
+#include <iostream>
 #include <optional>
 #include <string>
 #include <variant>
 #include <vector>
+
+#define NO_ERR -1
+
+// Global variable declarations
+extern std::vector<std::string> tokens;
 
 // Type aliases (to make things easier to understand)
 using StructId = std::string;
@@ -12,22 +18,32 @@ using FuncId = std::string;
 
 // Forward declaration of structs
 struct Type;
+struct UnaryOp;
+struct BinaryOp;
 struct Exp;
 struct Program;
 struct Decl;
 struct Struct;
 struct Function;
-struct Stmt;
 struct Rhs;
 struct Lval;
-struct UnaryOp;
-struct BinaryOp;
+struct Stmt;
+
+// Forward declaration of functions
+int create_ast();
+Program *initialize_ast();
+
+int runGlobal(Program &ast, int index);
+int runFunction(Program &ast, int index);
+int runStruct(Program &ast, int index);
+int runExtern(Program &ast, int index);
 
 /*
  * struct: Type
- * represents a Type in the AST, which is either an int, Struct, Function, or
+ *
+ * Represents a Type in the AST, which is either an int, Struct, Function, or
  * Pointer.
- * TODO: Figure out how to create these structs
+ *
  */
 struct Type {
   enum class TypeKind { Int, Struct, Fn, Ptr };
@@ -57,16 +73,34 @@ struct Type {
     delete pointed_to_type;
   }
 };
+
+/*
+ * struct: UnaryOp
+ *
+ * Represents a unary operation (negation, dereference)
+ *
+ */
 struct UnaryOp {
   // Represents a unary operation (e.g., negation, dereference).
   enum class UnOpKind { Neg, Deref };
   UnOpKind kind;
 
-  UnaryOp(const UnaryOp &s) : kind(s.kind){};
-  UnaryOp(const std::string &s) : kind(UnOpKind::Neg){};
+  UnaryOp(const std::string &s) {
+    if (s == "Neg") {
+      kind = UnOpKind::Neg;
+    } else if (s == "Deref") {
+      kind = UnOpKind::Deref;
+    }
+  }
+
+  UnaryOp(const UnaryOp &unary_operation) : kind(unary_operation.kind){};
 };
 
 /*
+ * struct: BinaryOp
+ *
+ * Represents a binary operation (Add, Subtract, Multiply, Divide, Equals,
+ * NotEquals, LessThan, LessThanEqual, GreaterThan, GreaterThanEqual)
  *
  */
 struct BinaryOp {
@@ -98,10 +132,15 @@ struct BinaryOp {
   };
 };
 
+/*
+ * struct: Exp
+ *
+ * Represents an expression in the program.
+ * This could be a number, identifier, nul, unary operation, binary operation,
+ * array access, field access, or function call.
+ *
+ */
 struct Exp {
-  // Represents an expression in the program.
-  // This could be a number, identifier, nil, unary operation, binary operation,
-  // array access, field access, or function call.
   enum class ExpKind {
     Num,
     Id,
@@ -163,9 +202,11 @@ struct Exp {
 
 /*
  * struct: Program
+ *
  * Represents the entire program.
  * Contains lists of global variables, struct definitions, extern declarations,
  * and function definitions.
+ *
  */
 struct Program {
   std::vector<Decl> globals;
@@ -176,6 +217,7 @@ struct Program {
 
 /*
  * struct: Decl
+ *
  * Represents a declaration of a variable or field. Contains the name of the
  * variable/field and it's type.
  */
@@ -186,8 +228,10 @@ struct Decl {
 
 /*
  * struct: Struct
+ *
  * Represents a struct definition
  * contains the name of the struct and a lsit of its fields
+ *
  */
 struct Struct {
   StructId name;
@@ -196,6 +240,7 @@ struct Struct {
 
 /*
  * struct: Function
+ *
  * Represents a function definition
  * Contains the name of the function, parameters, return type, locals, and
  * statements
@@ -208,6 +253,13 @@ struct Function {
   std::vector<Stmt> stmts;
 };
 
+/*
+ * struct: Rhs
+ *
+ * Represents the right hand side of an assignment or new expression
+ * It could be an expression or a new operation (for allocating memory)
+ *
+ */
 struct Rhs {
   // Represents the right-hand side of an assignment or new expression.
   // It could be an expression or a new operation (for allocating memory).
@@ -257,12 +309,14 @@ struct Lval {
       : kind(LvalKind::FieldAccess), field_ptr(new Lval(ptr)),
         acc_field(field) {}
 };
+
 /*
  * struct Stmt
+ *
  * Represents a statement in the program
  * This could be a break, continue, return, assignment, function vall, if
  * statement, or while loop
- * TODO: Figure out how to create these structs
+ *
  */
 struct Stmt {
   enum class StmtKind { Break, Continue, Return, Assign, Call, If, While };

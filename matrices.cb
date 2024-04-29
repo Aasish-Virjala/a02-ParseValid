@@ -1,0 +1,57 @@
+extern printM: (&matrix) -> _;
+global vari: int = 10;
+
+struct matrix {
+    data: &&int, // contents
+    rows: int,   // number of rows
+    cols: int    // number of columns
+}
+
+fn zero(n: int, m: int) -> &matrix {
+    let A: &matrix;
+
+    A = new matrix;
+    A.data = new &int n;
+    A.rows = n;
+    A.cols = n;
+
+    while n > 0 {
+        A.data[n - 1] = new int m;
+        n = n - 1;
+    }
+
+    return A;
+}
+
+fn add(A: &matrix, B: &matrix) -> &matrix {
+    let C: &matrix = zero(A.rows, A.cols), i: int, j: int;
+
+    while i < C.rows {
+        j = 0;
+        while j < C.cols {
+            C.data[i][j] = A.data[i][j] + B.data[i][j];
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+
+    return C;
+}
+
+// a + bi represented as a 2×2 matrix
+fn complex(a: int, b: int) -> &matrix {
+    let z: &matrix = zero(2, 2);
+
+    z.data[0][0] = a;
+    z.data[0][1] = -b;
+    z.data[1][0] = b;
+    z.data[1][1] = a;
+
+    return z;
+}
+
+fn main() -> int {
+    let a: &matrix = add(complex(1, 2), complex(3, 4));
+    printM(a);
+    return 0;
+}

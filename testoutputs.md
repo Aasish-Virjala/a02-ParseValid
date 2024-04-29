@@ -518,6 +518,21 @@ Program(
   ]
 )
 
+
+## Test 8
+### program
+fn fn() -> int {
+  return 0;
+}
+
+struct list {
+  value: int,
+  next: &list
+}
+
+let a: int = 10;
+
+
 # general steps:
 # 1. go through tokens and create AST while checking for parsing errors
 # 2. create validation functions for globals, structs,  with AST as input; return 
