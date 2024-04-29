@@ -12,6 +12,7 @@ using FuncId = std::string;
 
 // Forward declaration of structs
 struct Type;
+struct Exp;
 struct Program;
 struct Decl;
 struct Struct;
@@ -19,7 +20,6 @@ struct Function;
 struct Stmt;
 struct Rhs;
 struct Lval;
-struct Exp;
 struct UnaryOp;
 struct BinaryOp;
 
@@ -56,6 +56,109 @@ struct Type {
     delete ret_type;
     delete pointed_to_type;
   }
+};
+struct UnaryOp {
+  // Represents a unary operation (e.g., negation, dereference).
+  enum class UnOpKind { Neg, Deref };
+  UnOpKind kind;
+
+  UnaryOp(const UnaryOp &s) : kind(s.kind){};
+  UnaryOp(const std::string &s) : kind(UnOpKind::Neg){};
+};
+
+/*
+ *
+ */
+struct BinaryOp {
+  enum class BinOpKind { Add, Sub, Mul, Div, Equal, NotEq, Lt, Lte, Gt, Gte };
+  BinOpKind kind;
+
+  BinaryOp(std::string s) {
+    if (s == "Add") {
+      kind = BinOpKind::Add;
+    } else if (s == "Sub") {
+      kind = BinOpKind::Sub;
+    } else if (s == "Mul") {
+      kind = BinOpKind::Mul;
+    } else if (s == "Div") {
+      kind = BinOpKind::Div;
+    } else if (s == "Equal") {
+      kind = BinOpKind::Equal;
+    } else if (s == "NotEq") {
+      kind = BinOpKind::NotEq;
+    } else if (s == "Lt") {
+      kind = BinOpKind::Lt;
+    } else if (s == "Lte") {
+      kind = BinOpKind::Lte;
+    } else if (s == "Gt") {
+      kind = BinOpKind::Gt;
+    } else if (s == "Gte") {
+      kind = BinOpKind::Gte;
+    }
+  };
+};
+
+struct Exp {
+  // Represents an expression in the program.
+  // This could be a number, identifier, nil, unary operation, binary operation,
+  // array access, field access, or function call.
+  enum class ExpKind {
+    Num,
+    Id,
+    Nil,
+    UnOp,
+    BinOp,
+    ArrayAccess,
+    FieldAccess,
+    Call
+  };
+  ExpKind kind;
+
+  int32_t num_val;            // Num
+  std::string id_name;        // Id
+  UnaryOp *un_op = nullptr;   // UnOp
+  Exp *un_operand = nullptr;  // UnOp
+  Exp *bin_op = nullptr;      // BinOp
+  Exp *left_exp = nullptr;    // BinOp
+  Exp *right_exp = nullptr;   // BinOp
+  Exp *array_ptr = nullptr;   // ArrayAccess
+  Exp *array_exp = nullptr;   // ArrayAccess
+  Exp *field_ptr = nullptr;   // FieldAccess
+  std::string field_val;      // FieldAccess
+  Exp *call_callee = nullptr; // Call
+  std::vector<Exp> call_args; // Call
+
+  // Num constructor
+  Exp(const int32_t &n) : kind(ExpKind::Num), num_val(n){};
+
+  // Id constructor
+  Exp(const std::string &name) : kind(ExpKind::Id), id_name(name){};
+
+  // Nil constructor
+  Exp() : kind(ExpKind::Nil){};
+
+  // UnOp constructor
+  Exp(const UnaryOp &op, const Exp &operand)
+      : kind(ExpKind::UnOp), un_op(new UnaryOp(op)),
+        un_operand(new Exp(operand)){};
+
+  // BinOp constructor
+  Exp(const BinaryOp &op, const Exp &left, const Exp &right)
+      : kind(ExpKind::BinOp), bin_op(new BinaryOp(op)), left_exp(new Exp(left)),
+        right_exp(new Exp(right)){};
+
+  // ArrayAccess constructor
+  Exp(Exp ptr, Exp index)
+      : kind(ExpKind::ArrayAccess), array_ptr(new Exp(ptr)),
+        array_exp(new Exp(index)){};
+
+  // FieldAccess constructor
+  Exp(Exp ptr, std::string field)
+      : kind(ExpKind::FieldAccess), field_ptr(new Exp(ptr)), field_val(field){};
+
+  // Call constructor
+  Exp(Exp callee, std::vector<Exp> args)
+      : kind(ExpKind::Call), call_callee(new Exp(callee)), call_args(args){};
 };
 
 /*
@@ -115,15 +218,15 @@ struct Function {
 struct Stmt {
   enum class StmtKind { Break, Continue, Return, Assign, Call, If, While };
   StmtKind kind;
-  std::optional<Exp> *return_expression; // Return
-  Lval *left_hand_side = nullptr;        // Assign
-  Rhs *right_hand_side = nullptr;        // Assign
-  Lval *callLval = nullptr;              // Call
-  std::vector<Exp> call_arguments;       // Call
-  Exp *exp_guard = nullptr;              // While, If
-  std::vector<Stmt> true_vals;           // If
-  std::vector<Stmt> false_vals;          // If
-  std::vector<Stmt> while_body;          // While
+  std::optional<Exp> return_expression; // Return
+  Lval *left_hand_side = nullptr;       // Assign
+  Rhs *right_hand_side = nullptr;       // Assign
+  Lval *callLval = nullptr;             // Call
+  std::vector<Exp> call_arguments;      // Call
+  Exp *exp_guard = nullptr;             // While, If
+  std::vector<Stmt> true_vals;          // If
+  std::vector<Stmt> false_vals;         // If
+  std::vector<Stmt> while_body;         // While
 
   // Break & Continue constructor
   Stmt(std::string s) {
@@ -209,110 +312,6 @@ struct Lval {
   Lval(const Lval &ptr, const std::string field)
       : kind(LvalKind::FieldAccess), field_ptr(new Lval(ptr)),
         acc_field(field) {}
-};
-
-struct Exp {
-  // Represents an expression in the program.
-  // This could be a number, identifier, nil, unary operation, binary operation,
-  // array access, field access, or function call.
-  enum class ExpKind {
-    Num,
-    Id,
-    Nil,
-    UnOp,
-    BinOp,
-    ArrayAccess,
-    FieldAccess,
-    Call
-  };
-  ExpKind kind;
-
-  int32_t num_val;            // Num
-  std::string id_name;        // Id
-  UnaryOp *un_op = nullptr;   // UnOp
-  Exp *un_operand = nullptr;  // UnOp
-  Exp *bin_op = nullptr;      // BinOp
-  Exp *left_exp = nullptr;    // BinOp
-  Exp *right_exp = nullptr;   // BinOp
-  Exp *array_ptr = nullptr;   // ArrayAccess
-  Exp *array_exp = nullptr;   // ArrayAccess
-  Exp *field_ptr = nullptr;   // FieldAccess
-  std::string field_val;      // FieldAccess
-  Exp *call_callee = nullptr; // Call
-  std::vector<Exp> call_args; // Call
-
-  // Num constructor
-  Exp(const int32_t &n) : kind(ExpKind::Num), num_val(n){};
-
-  // Id constructor
-  Exp(const std::string &name) : kind(ExpKind::Id), id_name(name){};
-
-  // Nil constructor
-  Exp() : kind(ExpKind::Nil){};
-
-  // UnOp constructor
-  Exp(const UnaryOp &op, const Exp &operand)
-      : kind(ExpKind::UnOp), un_op(new UnaryOp(op)),
-        un_operand(new Exp(operand)){};
-
-  // BinOp constructor
-  Exp(const BinaryOp &op, const Exp &left, const Exp &right)
-      : kind(ExpKind::BinOp), bin_op(new BinaryOp(op)), left_exp(new Exp(left)),
-        right_exp(new Exp(right)){};
-
-  // ArrayAccess constructor
-  Exp(Exp ptr, Exp index)
-      : kind(ExpKind::ArrayAccess), array_ptr(new Exp(ptr)),
-        array_exp(new Exp(index)){};
-
-  // FieldAccess constructor
-  Exp(Exp ptr, std::string field)
-      : kind(ExpKind::FieldAccess), field_ptr(new Exp(ptr)), field_val(field){};
-
-  // Call constructor
-  Exp(Exp callee, std::vector<Exp> args)
-      : kind(ExpKind::Call), call_callee(new Exp(callee)), call_args(args){};
-};
-
-struct UnaryOp {
-  // Represents a unary operation (e.g., negation, dereference).
-  enum class UnOpKind { Neg, Deref };
-  UnOpKind kind;
-
-  UnaryOp(const UnaryOp &s) : kind(s.kind){};
-  UnaryOp(const std::string &s) : kind(UnOpKind::Neg){};
-};
-
-/*
- *
- */
-struct BinaryOp {
-  enum class BinOpKind { Add, Sub, Mul, Div, Equal, NotEq, Lt, Lte, Gt, Gte };
-  BinOpKind kind;
-
-  BinaryOp(std::string s) {
-    if (s == "Add") {
-      kind = BinOpKind::Add;
-    } else if (s == "Sub") {
-      kind = BinOpKind::Sub;
-    } else if (s == "Mul") {
-      kind = BinOpKind::Mul;
-    } else if (s == "Div") {
-      kind = BinOpKind::Div;
-    } else if (s == "Equal") {
-      kind = BinOpKind::Equal;
-    } else if (s == "NotEq") {
-      kind = BinOpKind::NotEq;
-    } else if (s == "Lt") {
-      kind = BinOpKind::Lt;
-    } else if (s == "Lte") {
-      kind = BinOpKind::Lte;
-    } else if (s == "Gt") {
-      kind = BinOpKind::Gt;
-    } else if (s == "Gte") {
-      kind = BinOpKind::Gte;
-    }
-  };
 };
 
 // Used in struct definitions
