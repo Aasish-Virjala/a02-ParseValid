@@ -8,6 +8,7 @@
 #include <vector>
 
 #define NO_ERR -2
+#define END_OF_FILE -3
 
 // Global variable declarations
 extern std::vector<std::string> tokens;

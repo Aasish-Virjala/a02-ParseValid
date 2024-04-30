@@ -20,19 +20,26 @@ int create_ast() {
             << "\nExterns: " << ast->externs.size()
             << "\nFunctions: " << ast->functions.size() << std::endl;
 
-  int parsing_index = 0;
+  parsing_index = 0;
   int err = NO_ERR;
+  std::string token;
 
   while (parsing_index < tokens.size()) {
-    std::string token = tokens[parsing_index];
-
+    token = tokens[parsing_index];
     // handle a global
+
     if (token == "Let") {
+      std::cout << "Handling a global" << std::endl;
+      std::cout << "Index " << parsing_index << std::endl;
       if (!checkValidIndex()) {
         // Consume "Let"
         return -1;
       }
       err = parse_global(ast);
+      if (err == END_OF_FILE) {
+        err = NO_ERR;
+        break;
+      }
       if (err != NO_ERR) {
         return err;
       }
@@ -68,7 +75,9 @@ int create_ast() {
     }
   }
 
-  return 1;
+  std::cout << "returning err" << std::endl;
+
+  return err;
 }
 
 /*
@@ -76,8 +85,10 @@ int create_ast() {
  *
  * parses a single line of globals.
  *
+ * glob ::= `let` decls `;`
  */
 int parse_global(Program *ast) {
+  std::cout << "In parse_global" << std::endl;
   // 'let' was handled previously
   int ret_val;
   std::string curr_token;
@@ -91,9 +102,14 @@ int parse_global(Program *ast) {
   if (curr_token != "Semicolon") {
     return parsing_index;
   }
-
+  std::cout << "Validation" << std::endl;
+  if (!checkValidIndex()) {
+    // Consume "Semicolon"
+    return END_OF_FILE;
+  }
   // TODO: Append this to the AST
 
+  std::cout << "No ERR" << std::endl;
   return NO_ERR;
 }
 
@@ -102,8 +118,10 @@ int parse_global(Program *ast) {
  *
  * parses a single decls.
  *
+ * decls ::= decl (`,` decl)*
  */
 int parse_decls(Program *ast) {
+  std::cout << "In parse_decls" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -140,6 +158,7 @@ int parse_decls(Program *ast) {
  *
  */
 int parse_decl(Program *ast) {
+  std::cout << "In parse_decl" << std::endl;
   // id
   std::string token = tokens[parsing_index];
   if (token.length() < 3 || token.substr(0, 3) != "Id(") {
@@ -179,6 +198,7 @@ int parse_decl(Program *ast) {
  *  type ::= `&`* type_ad
  */
 int parse_type(Program *ast) {
+  std::cout << "In parse_type" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -215,6 +235,7 @@ int parse_type(Program *ast) {
  *         | `(` type_op
  */
 int parse_type_ad(Program *ast) {
+  std::cout << "In parse_type_ad" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -270,6 +291,7 @@ int parse_type_ad(Program *ast) {
  *          | type type_fp
  */
 int parse_type_op(Program *ast) {
+  std::cout << "In parse_type_op" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -313,6 +335,7 @@ int parse_type_op(Program *ast) {
  * type_ar ::= `->` rettyp
  */
 int parse_type_ar(Program *ast) {
+  std::cout << "In parse_type_ar" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -345,6 +368,7 @@ int parse_type_ar(Program *ast) {
  *          | `_`
  */
 int parse_rettyp(Program *ast) {
+  std::cout << "In parse_rettyp" << std::endl;
   int ret_val;
   std::string curr_token;
   curr_token = tokens[parsing_index];
@@ -381,6 +405,7 @@ int parse_rettyp(Program *ast) {
  *         | (`,` type)+ `)` type_ar
  */
 int parse_type_fp(Program *ast) {
+  std::cout << "In parse_type_fp" << std::endl;
   int ret_val;
   std::string curr_token;
 
