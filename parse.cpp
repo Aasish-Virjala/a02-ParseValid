@@ -7,7 +7,11 @@ using namespace std;
 
 std::vector<std::string> tokens;
 
+// Forward declarations of functions
 void read_file(string input_string);
+void printAST(struct Program *ast);
+void printGlobals(vector<Decl> prog_globs);
+void printDecl(Decl declaration);
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -28,13 +32,16 @@ int main(int argc, char *argv[]) {
 
   // return parse error code
   int error = NO_ERR;
-  error = create_ast();
+  struct Program *ast = initialize_ast();
+  error = create_ast(ast);
 
   // Catches any parse errors
   if (error != NO_ERR) {
     std::cout << "parse error at token " << to_string(error);
     return 0;
   }
+
+  printAST(ast);
 
   std::cout << "No parse error" << endl;
 
@@ -60,4 +67,55 @@ void read_file(string input_string) {
       currentString += curr_char;
     }
   }
+}
+
+/*
+ * function: printAST
+ *
+ * prints AST in the format for output
+ *
+ */
+void printAST(struct Program *ast) {
+  std::cout << "Program(" << std::endl;
+
+  // Printing Globals
+  std::cout << "globals = [";
+  printGlobals(ast->globals);
+  std::cout << "]," << std::endl;
+
+  std::cout << ")" << std::endl; /* closes Program( */
+}
+
+/*
+ * function: printGlobals
+ *
+ * prints out the global vector for grading
+ *
+ */
+void printGlobals(vector<Decl> prog_globs) {
+  if (prog_globs.size() > 0) {
+    printDecl(prog_globs[0]);
+  }
+  for (int i = 1; i < prog_globs.size(); i++) {
+    std::cout << std::endl;
+    printDecl(prog_globs[i]);
+  }
+}
+
+/*
+ * function: printDecl
+ *
+ * prints a single decl object
+ *
+ */
+void printDecl(Decl declaration) {
+  std::cout << "Decl(";
+  std::cout << declaration.name;
+  std::cout << ",";
+
+  /*
+   * TODO: Do recursive call to print declaration.type vals.
+   */
+
+  std::cout << ")"; // Closes Decl(
 }

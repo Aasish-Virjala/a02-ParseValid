@@ -2,6 +2,12 @@
 
 int parsing_index;
 
+/*
+ * function: initialize_ast()
+ *
+ * Initializes all the fields for a Program block
+ *
+ */
 struct Program *initialize_ast() {
   struct Program *our_prog = new struct Program;
   our_prog->globals = {};
@@ -12,8 +18,13 @@ struct Program *initialize_ast() {
   return our_prog;
 }
 
-int create_ast() {
-  struct Program *ast = initialize_ast();
+/*
+ * function: create_ast()
+ *
+ * Initializes all the fields for a Program block
+ *
+ */
+int create_ast(Program *ast) {
 
   std::cout << "Globals: " << ast->globals.size()
             << "\nStructs: " << ast->structs.size()
@@ -75,8 +86,6 @@ int create_ast() {
     }
   }
 
-  std::cout << "returning err" << std::endl;
-
   return err;
 }
 
@@ -102,14 +111,12 @@ int parse_global(Program *ast) {
   if (curr_token != "Semicolon") {
     return parsing_index;
   }
-  std::cout << "Validation" << std::endl;
   if (!checkValidIndex()) {
     // Consume "Semicolon"
     return END_OF_FILE;
   }
   // TODO: Append this to the AST
 
-  std::cout << "No ERR" << std::endl;
   return NO_ERR;
 }
 
@@ -161,10 +168,16 @@ int parse_decl(Program *ast) {
   std::cout << "In parse_decl" << std::endl;
   // id
   std::string token = tokens[parsing_index];
+
   if (token.length() < 3 || token.substr(0, 3) != "Id(") {
     return parsing_index;
   }
   std::string functionName = token.substr(3, token.length() - 4);
+
+  // Creating the Decl object that will get stored in the Decl array for globals
+  struct Decl *currentDecl = new Decl();
+  // Assigning the string for the name
+  currentDecl->name = functionName;
 
   if (!checkValidIndex()) {
     // Consume "Id([...])"
@@ -182,11 +195,20 @@ int parse_decl(Program *ast) {
   }
 
   // type
-  int ret_val = parse_type(ast);
+  struct Type *typeCreated = new Type();
+  int ret_val = parse_type(ast, typeCreated);
+
+  // Set the final field of Decl
+  currentDecl->type = typeCreated;
+
+  std::cout << "addr of TypeCreated" << typeCreated << std::endl;
+
   if (ret_val != NO_ERR) {
     return ret_val;
   }
 
+  // Place created vector onto the AST
+  ast->globals.push_back(*currentDecl);
   return NO_ERR;
 }
 
@@ -197,34 +219,50 @@ int parse_decl(Program *ast) {
  *
  *  type ::= `&`* type_ad
  */
-int parse_type(Program *ast) {
+int parse_type(Program *ast, Type *typeField) {
   std::cout << "In parse_type" << std::endl;
   int ret_val;
   std::string curr_token;
 
   // '&'*
+  struct Type *origAddr = typeField;
+  curr_token = tokens[parsing_index];
   while (1) {
-    curr_token = tokens[parsing_index];
     if (curr_token == "Address") {
-      // TODO: Wrap the type in Ptr(type)
       if (!checkValidIndex()) {
         // Consume "Address"
+
+        std::cout << "ERR236, ind: " << parsing_index << std::endl;
         return -1;
       }
+
+      // Constructing pointer Type struct
+      typeField->kind = Type::TypeKind::Ptr;
+      struct Type *typePointed = new Type();
+      typeField->pointed_to_type = typePointed;
+      typeField = typePointed;
+      curr_token = tokens[parsing_index];
+
     } else {
       break;
     }
   }
 
   // type_ad
-  ret_val = parse_type_ad(ast);
+  ret_val = parse_type_ad(ast, typeField);
   if (ret_val != NO_ERR) {
+    std::cout << "ERR253" << parsing_index << std::endl;
     return ret_val;
   }
+  typeField = origAddr;
 
   return NO_ERR;
 }
 
+// let sai:&&int;
+// parse_type(nextIndex) &int
+// parse_type(nextIndex) int
+//
 /*
  * function: parse_type_ad
  *
@@ -234,7 +272,7 @@ int parse_type(Program *ast) {
  *         | id
  *         | `(` type_op
  */
-int parse_type_ad(Program *ast) {
+int parse_type_ad(Program *ast, Type *typeField) {
   std::cout << "In parse_type_ad" << std::endl;
   int ret_val;
   std::string curr_token;
@@ -242,11 +280,14 @@ int parse_type_ad(Program *ast) {
   curr_token = tokens[parsing_index];
   // 'int'
   if (curr_token == "Int") {
-    // TODO: Implement the Int field, that may/may not be wrapped in ptr
     if (!checkValidIndex()) {
       // Consume "Int"
       return -1;
     }
+
+    // Assigning the Type struct for an int
+    // end of recursive call
+    typeField->kind = Type::TypeKind::Int;
 
     return NO_ERR;
   }
@@ -260,6 +301,9 @@ int parse_type_ad(Program *ast) {
       return -1;
     }
 
+    // Initialise the typefield struct for id (Struct)
+    typeField->kind = Type::TypeKind::Struct;
+    typeField->struct_name = functionName;
     return NO_ERR;
   }
 
@@ -273,12 +317,14 @@ int parse_type_ad(Program *ast) {
     // type_op
     ret_val = parse_type_op(ast);
     if (ret_val != NO_ERR) {
+      std::cout << "ERR318" << std::endl;
       return ret_val;
     }
 
     return NO_ERR;
   }
 
+  std::cout << "ERR325" << parsing_index << std::endl;
   return parsing_index;
 }
 
@@ -305,6 +351,7 @@ int parse_type_op(Program *ast) {
     // type_ar
     ret_val = parse_type_ar(ast);
     if (ret_val != NO_ERR) {
+      std::cout << "ERR352" << std::endl;
       return ret_val;
     }
 
@@ -313,13 +360,16 @@ int parse_type_op(Program *ast) {
 
   // type type_fp
   else {
-    ret_val = parse_type(ast);
+    struct Type *TEMP_type = nullptr;
+    ret_val = parse_type(ast, TEMP_type);
     if (ret_val != NO_ERR) {
+      std::cout << "ERR364" << std::endl;
       return ret_val;
     }
 
     ret_val = parse_type_fp(ast);
     if (ret_val != NO_ERR) {
+      std::cout << "ERR370" << std::endl;
       return ret_val;
     }
 
@@ -350,11 +400,13 @@ int parse_type_ar(Program *ast) {
     // rettyp
     ret_val = parse_rettyp(ast);
     if (ret_val != NO_ERR) {
+      std::cout << "ERR401" << std::endl;
       return ret_val;
     }
 
     return NO_ERR;
   }
+  std::cout << "ERR407" << std::endl;
 
   return parsing_index;
 }
@@ -375,7 +427,8 @@ int parse_rettyp(Program *ast) {
 
   // type
   int orig_index = parsing_index;
-  ret_val = parse_type(ast);
+  struct Type *TEMP_type;
+  ret_val = parse_type(ast, TEMP_type);
   if (ret_val == NO_ERR) {
     return NO_ERR;
   }
@@ -392,6 +445,7 @@ int parse_rettyp(Program *ast) {
   }
 
   parsing_index = orig_index;
+  std::cout << "ERR446" << std::endl;
   return parsing_index;
 }
 
@@ -441,7 +495,8 @@ int parse_type_fp(Program *ast) {
       return -1;
     }
 
-    ret_val = parse_type(ast);
+    struct Type *TEMP_type = nullptr;
+    ret_val = parse_type(ast, TEMP_type);
     if (ret_val != NO_ERR) {
       return ret_val;
     }
@@ -458,7 +513,7 @@ int parse_type_fp(Program *ast) {
       }
 
       // Invalid type parse means error.
-      ret_val = parse_type(ast);
+      ret_val = parse_type(ast, TEMP_type);
       if (ret_val != NO_ERR) {
         return ret_val;
       }

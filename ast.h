@@ -32,14 +32,14 @@ struct Lval;
 struct Stmt;
 
 // Forward declaration of functions
-int create_ast();
+int create_ast(Program *ast);
 Program *initialize_ast();
 
 int parse_global(Program *ast);
 int parse_decls(Program *ast);
 int parse_decl(Program *ast);
-int parse_type(Program *ast);
-int parse_type_ad(Program *ast);
+int parse_type(Program *ast, Type *typeField);
+int parse_type_ad(Program *ast, Type *typeField);
 int parse_type_op(Program *ast);
 int parse_type_ar(Program *ast);
 int parse_rettyp(Program *ast);
@@ -50,6 +50,7 @@ int runExtern(Program *ast);
 int checkValidDecls(std::vector<Decl> *globals);
 
 bool checkValidIndex();
+
 /*
  * struct: Type
  *
@@ -60,30 +61,31 @@ bool checkValidIndex();
 struct Type {
   enum class TypeKind { Int, Struct, Fn, Ptr };
   TypeKind kind;
-  std::optional<std::string> struct_name;
+  std::string struct_name;
   std::vector<Type> params;
-  Type *ret_type = nullptr;
-  Type *pointed_to_type = nullptr;
+  Type *ret_type;
+  Type *pointed_to_type;
 
   // Int constructor
-  Type() : kind(TypeKind::Int) {}
+  Type() : ret_type(nullptr), pointed_to_type(nullptr) {}
+  // Type() : kind(TypeKind::Int) {}
 
   // Struct constructor
-  Type(const StructId &name) : kind(TypeKind::Struct), struct_name(name) {}
-
+  // Type(const StructId &name) : kind(TypeKind::Struct), struct_name(name) {}
+  //
   // Fn constructor
-  Type(const std::vector<Type> &params, const Type &ret_type)
-      : kind(TypeKind::Fn), params(params), ret_type(new Type(ret_type)) {}
+  // Type(const std::vector<Type> &params, const Type &ret_type)
+  //     : kind(TypeKind::Fn), params(params), ret_type(new Type(ret_type)) {}
 
   // Ptr constructor
-  Type(const Type &pointed_to_type)
-      : kind(TypeKind::Ptr), pointed_to_type(new Type(pointed_to_type)) {}
+  // Type(const Type *in_pointed_to_type)
+  //     : kind(TypeKind::Ptr), pointed_to_type(in_pointed_to_type) {}
 
   // Destructor for memory cleanup from new calls
-  ~Type() {
-    delete ret_type;
-    delete pointed_to_type;
-  }
+  // ~Type() {
+  //   delete ret_type;
+  //   delete pointed_to_type;
+  // }
 };
 
 /*

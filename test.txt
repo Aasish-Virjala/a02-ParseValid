@@ -9,12 +9,4 @@ Address
 Address
 Address
 Int
-Comma
-Id(sai)
-Colon
-OpenParen
-Int
-CloseParen
-Arrow
-Underscore
 Semicolon
