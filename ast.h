@@ -11,6 +11,7 @@
 
 // Global variable declarations
 extern std::vector<std::string> tokens;
+extern int parsing_index;
 
 // Type aliases (to make things easier to understand)
 using StructId = std::string;
@@ -33,10 +34,11 @@ struct Stmt;
 int create_ast();
 Program *initialize_ast();
 
-int runGlobal(Program &ast, int index);
-int runFunction(Program &ast, int index);
-int runStruct(Program &ast, int index);
-int runExtern(Program &ast, int index);
+int runGlobal(Program *ast);
+int runFunction(Program *ast);
+int runStruct(Program *ast);
+int runExtern(Program *ast);
+int checkValidDecls(std::vector<Decl>* globals);
 
 /*
  * struct: Type
@@ -55,7 +57,7 @@ struct Type {
 
   // Int constructor
   Type() : kind(TypeKind::Int) {}
-
+  
   // Struct constructor
   Type(const StructId &name) : kind(TypeKind::Struct), struct_name(name) {}
 

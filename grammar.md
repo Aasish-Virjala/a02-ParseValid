@@ -102,7 +102,7 @@ binop_p2 ::= `+` | `-`
 binop_p3 ::= `==` | `!=` | `<` | `<=` | `>` | `>=`
 
 ## rewritten with our token names
-type ::= [Address]* type_ad
+<!-- type ::= [Address]* type_ad
 type_ad ::= [Int]
 | [Id]
 | [OpenParen] type_op
@@ -113,4 +113,4 @@ type_fp ::= [CloseParen] type_ar?
 type_ar ::= [Arrow] rettyp
 funtype ::= [OpenParen] (type ([Comma] type)*)? [CloseParen] [Arrow] rettyp
 rettyp ::= type 
-| [Underscore]
+| [Underscore] -->

@@ -1,5 +1,5 @@
 extern printM: (&matrix) -> _;
-global vari: int = 10;
+let sum:int;
 
 struct matrix {
     data: &&int, // contents
@@ -55,3 +55,649 @@ fn main() -> int {
     printM(a);
     return 0;
 }
+
+
+
+// Output
+
+Extern
+Id(printM)
+Colon
+OpenParen
+Address
+Id(matrix)
+CloseParen
+Arrow
+Underscore
+Semicolon
+Let
+Id(sum)
+Colon
+Int
+Semicolon
+Struct
+Id(matrix)
+OpenBrace
+Id(data)
+Colon
+Address
+Address
+Int
+Comma
+Id(rows)
+Colon
+Int
+Comma
+Id(cols)
+Colon
+Int
+CloseBrace
+Fn
+Id(zero)
+OpenParen
+Id(n)
+Colon
+Int
+Comma
+Id(m)
+Colon
+Int
+CloseParen
+Arrow
+Address
+Id(matrix)
+OpenBrace
+Let
+Id(A)
+Colon
+Address
+Id(matrix)
+Semicolon
+Id(A)
+Gets
+New
+Id(matrix)
+Semicolon
+Id(A)
+Dot
+Id(data)
+Gets
+New
+Address
+Int
+Id(n)
+Semicolon
+Id(A)
+Dot
+Id(rows)
+Gets
+Id(n)
+Semicolon
+Id(A)
+Dot
+Id(cols)
+Gets
+Id(n)
+Semicolon
+While
+Id(n)
+Gt
+Num(0)
+OpenBrace
+Id(A)
+Dot
+Id(data)
+OpenBracket
+Id(n)
+Dash
+Num(1)
+CloseBracket
+Gets
+New
+Int
+Id(m)
+Semicolon
+Id(n)
+Gets
+Id(n)
+Dash
+Num(1)
+Semicolon
+CloseBrace
+Return
+Id(A)
+Semicolon
+CloseBrace
+Fn
+Id(add)
+OpenParen
+Id(A)
+Colon
+Address
+Id(matrix)
+Comma
+Id(B)
+Colon
+Address
+Id(matrix)
+CloseParen
+Arrow
+Address
+Id(matrix)
+OpenBrace
+Let
+Id(C)
+Colon
+Address
+Id(matrix)
+Gets
+Id(zero)
+OpenParen
+Id(A)
+Dot
+Id(rows)
+Comma
+Id(A)
+Dot
+Id(cols)
+CloseParen
+Comma
+Id(i)
+Colon
+Int
+Comma
+Id(j)
+Colon
+Int
+Semicolon
+While
+Id(i)
+Lt
+Id(C)
+Dot
+Id(rows)
+OpenBrace
+Id(j)
+Gets
+Num(0)
+Semicolon
+While
+Id(j)
+Lt
+Id(C)
+Dot
+Id(cols)
+OpenBrace
+Id(C)
+Dot
+Id(data)
+OpenBracket
+Id(i)
+CloseBracket
+OpenBracket
+Id(j)
+CloseBracket
+Gets
+Id(A)
+Dot
+Id(data)
+OpenBracket
+Id(i)
+CloseBracket
+OpenBracket
+Id(j)
+CloseBracket
+Plus
+Id(B)
+Dot
+Id(data)
+OpenBracket
+Id(i)
+CloseBracket
+OpenBracket
+Id(j)
+CloseBracket
+Semicolon
+Id(j)
+Gets
+Id(j)
+Plus
+Num(1)
+Semicolon
+CloseBrace
+Id(i)
+Gets
+Id(i)
+Plus
+Num(1)
+Semicolon
+CloseBrace
+Return
+Id(C)
+Semicolon
+CloseBrace
+Fn
+Id(complex)
+OpenParen
+Id(a)
+Colon
+Int
+Comma
+Id(b)
+Colon
+Int
+CloseParen
+Arrow
+Address
+Id(matrix)
+OpenBrace
+Let
+Id(z)
+Colon
+Address
+Id(matrix)
+Gets
+Id(zero)
+OpenParen
+Num(2)
+Comma
+Num(2)
+CloseParen
+Semicolon
+Id(z)
+Dot
+Id(data)
+OpenBracket
+Num(0)
+CloseBracket
+OpenBracket
+Num(0)
+CloseBracket
+Gets
+Id(a)
+Semicolon
+Id(z)
+Dot
+Id(data)
+OpenBracket
+Num(0)
+CloseBracket
+OpenBracket
+Num(1)
+CloseBracket
+Gets
+Dash
+Id(b)
+Semicolon
+Id(z)
+Dot
+Id(data)
+OpenBracket
+Num(1)
+CloseBracket
+OpenBracket
+Num(0)
+CloseBracket
+Gets
+Id(b)
+Semicolon
+Id(z)
+Dot
+Id(data)
+OpenBracket
+Num(1)
+CloseBracket
+OpenBracket
+Num(1)
+CloseBracket
+Gets
+Id(a)
+Semicolon
+Return
+Id(z)
+Semicolon
+CloseBrace
+Fn
+Id(main)
+OpenParen
+CloseParen
+Arrow
+Int
+OpenBrace
+Let
+Id(a)
+Colon
+Address
+Id(matrix)
+Gets
+Id(add)
+OpenParen
+Id(complex)
+OpenParen
+Num(1)
+Comma
+Num(2)
+CloseParen
+Comma
+Id(complex)
+OpenParen
+Num(3)
+Comma
+Num(4)
+CloseParen
+CloseParen
+Semicolon
+Id(printM)
+OpenParen
+Id(a)
+CloseParen
+Semicolon
+Return
+Num(0)
+Semicolon
+CloseBrace
+
+
+
+// Output
+
+Program(
+  globals = [Decl(sum, Int)],
+  structs = [
+    Struct(
+      name = matrix,
+      fields = [
+        Decl(data, Ptr(Ptr(Int))),
+        Decl(rows, Int),
+        Decl(cols, Int)
+      ]
+    )
+  ],
+  externs = [Decl(printM, Fn(prms = [Ptr(Struct(matrix))], ret = _))],
+  functions = [
+    Function(
+      name = zero,
+      params = [
+        Decl(n, Int),
+        Decl(m, Int)
+      ],
+      rettyp = Ptr(Struct(matrix)),
+      locals = [(Decl(A, Ptr(Struct(matrix))), _)],
+      stmts = [
+        Assign(
+          lhs = Id(A),
+          rhs = New(Struct(matrix), Num(1))
+        ),
+        Assign(
+          lhs = FieldAccess(
+            ptr = Id(A),
+            field = data
+          ),
+          rhs = New(Ptr(Int), Id(n))
+        ),
+        Assign(
+          lhs = FieldAccess(
+            ptr = Id(A),
+            field = rows
+          ),
+          rhs = Id(n)
+        ),
+        Assign(
+          lhs = FieldAccess(
+            ptr = Id(A),
+            field = cols
+          ),
+          rhs = Id(n)
+        ),
+        While(
+          guard = BinOp(
+            op = Gt,
+            left = Id(n),
+            right = Num(0)
+          ),
+          body = [
+            Assign(
+              lhs = ArrayAccess(
+                ptr = FieldAccess(
+                  ptr = Id(A),
+                  field = data
+                ),
+                index = BinOp(
+                  op = Sub,
+                  left = Id(n),
+                  right = Num(1)
+                )
+              ),
+              rhs = New(Int, Id(m))
+            ),
+            Assign(
+              lhs = Id(n),
+              rhs = BinOp(
+                op = Sub,
+                left = Id(n),
+                right = Num(1)
+              )
+            )
+          ]
+        ),
+        Return(
+          Id(A)
+        )
+      ]
+    ),
+    Function(
+      name = add,
+      params = [
+        Decl(A, Ptr(Struct(matrix))),
+        Decl(B, Ptr(Struct(matrix)))
+      ],
+      rettyp = Ptr(Struct(matrix)),
+      locals = [
+        (Decl(C, Ptr(Struct(matrix))), Call(
+            callee = Id(zero),
+            args = [
+              FieldAccess(
+                ptr = Id(A),
+                field = rows
+              ),
+              FieldAccess(
+                ptr = Id(A),
+                field = cols
+              )
+            ]
+          )),
+        (Decl(i, Int), _),
+        (Decl(j, Int), _)
+      ],
+      stmts = [
+        While(
+          guard = BinOp(
+            op = Lt,
+            left = Id(i),
+            right = FieldAccess(
+              ptr = Id(C),
+              field = rows
+            )
+          ),
+          body = [
+            Assign(
+              lhs = Id(j),
+              rhs = Num(0)
+            ),
+            While(
+              guard = BinOp(
+                op = Lt,
+                left = Id(j),
+                right = FieldAccess(
+                  ptr = Id(C),
+                  field = cols
+                )
+              ),
+              body = [
+                Assign(
+                  lhs = ArrayAccess(
+                    ptr = ArrayAccess(
+                      ptr = FieldAccess(
+                        ptr = Id(C),
+                        field = data
+                      ),
+                      index = Id(i)
+                    ),
+                    index = Id(j)
+                  ),
+                  rhs = BinOp(
+                    op = Add,
+                    left = ArrayAccess(
+                      ptr = ArrayAccess(
+                        ptr = FieldAccess(
+                          ptr = Id(A),
+                          field = data
+                        ),
+                        index = Id(i)
+                      ),
+                      index = Id(j)
+                    ),
+                    right = ArrayAccess(
+                      ptr = ArrayAccess(
+                        ptr = FieldAccess(
+                          ptr = Id(B),
+                          field = data
+                        ),
+                        index = Id(i)
+                      ),
+                      index = Id(j)
+                    )
+                  )
+                ),
+                Assign(
+                  lhs = Id(j),
+                  rhs = BinOp(
+                    op = Add,
+                    left = Id(j),
+                    right = Num(1)
+                  )
+                )
+              ]
+            ),
+            Assign(
+              lhs = Id(i),
+              rhs = BinOp(
+                op = Add,
+                left = Id(i),
+                right = Num(1)
+              )
+            )
+          ]
+        ),
+        Return(
+          Id(C)
+        )
+      ]
+    ),
+    Function(
+      name = complex,
+      params = [
+        Decl(a, Int),
+        Decl(b, Int)
+      ],
+      rettyp = Ptr(Struct(matrix)),
+      locals = [(Decl(z, Ptr(Struct(matrix))), Call(
+            callee = Id(zero),
+            args = [
+              Num(2),
+              Num(2)
+            ]
+          ))],
+      stmts = [
+        Assign(
+          lhs = ArrayAccess(
+            ptr = ArrayAccess(
+              ptr = FieldAccess(
+                ptr = Id(z),
+                field = data
+              ),
+              index = Num(0)
+            ),
+            index = Num(0)
+          ),
+          rhs = Id(a)
+        ),
+        Assign(
+          lhs = ArrayAccess(
+            ptr = ArrayAccess(
+              ptr = FieldAccess(
+                ptr = Id(z),
+                field = data
+              ),
+              index = Num(0)
+            ),
+            index = Num(1)
+          ),
+          rhs = Neg(Id(b))
+        ),
+        Assign(
+          lhs = ArrayAccess(
+            ptr = ArrayAccess(
+              ptr = FieldAccess(
+                ptr = Id(z),
+                field = data
+              ),
+              index = Num(1)
+            ),
+            index = Num(0)
+          ),
+          rhs = Id(b)
+        ),
+        Assign(
+          lhs = ArrayAccess(
+            ptr = ArrayAccess(
+              ptr = FieldAccess(
+                ptr = Id(z),
+                field = data
+              ),
+              index = Num(1)
+            ),
+            index = Num(1)
+          ),
+          rhs = Id(a)
+        ),
+        Return(
+          Id(z)
+        )
+      ]
+    ),
+    Function(
+      name = main,
+      params = [],
+      rettyp = Int,
+      locals = [(Decl(a, Ptr(Struct(matrix))), Call(
+            callee = Id(add),
+            args = [
+              Call(
+                callee = Id(complex),
+                args = [
+                  Num(1),
+                  Num(2)
+                ]
+              ),
+              Call(
+                callee = Id(complex),
+                args = [
+                  Num(3),
+                  Num(4)
+                ]
+              )
+            ]
+          ))],
+      stmts = [
+        Call(
+          callee = Id(printM),
+          args = [Id(a)]
+        ),
+        Return(
+          Num(0)
+        )
+      ]
+    )
+  ]
+)
