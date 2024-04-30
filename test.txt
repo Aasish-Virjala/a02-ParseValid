@@ -1,12 +1,5 @@
-Num(10)
-Fn
-Id(main)
-OpenParen
-CloseParen
-Arrow
+Let
+Id(sum)
+Colon
 Int
-OpenBrace
-Return
-Num(42)
 Semicolon
-CloseBrace

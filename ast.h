@@ -7,7 +7,7 @@
 #include <variant>
 #include <vector>
 
-#define NO_ERR -1
+#define NO_ERR -2
 
 // Global variable declarations
 extern std::vector<std::string> tokens;
@@ -34,12 +34,21 @@ struct Stmt;
 int create_ast();
 Program *initialize_ast();
 
-int runGlobal(Program *ast);
+int parse_global(Program *ast);
+int parse_decls(Program *ast);
+int parse_decl(Program *ast);
+int parse_type(Program *ast);
+int parse_type_ad(Program *ast);
+int parse_type_op(Program *ast);
+int parse_type_ar(Program *ast);
+int parse_rettyp(Program *ast);
+int parse_type_fp(Program *ast);
 int runFunction(Program *ast);
 int runStruct(Program *ast);
 int runExtern(Program *ast);
-int checkValidDecls(std::vector<Decl>* globals);
+int checkValidDecls(std::vector<Decl> *globals);
 
+bool checkValidIndex();
 /*
  * struct: Type
  *
@@ -57,7 +66,7 @@ struct Type {
 
   // Int constructor
   Type() : kind(TypeKind::Int) {}
-  
+
   // Struct constructor
   Type(const StructId &name) : kind(TypeKind::Struct), struct_name(name) {}
 
