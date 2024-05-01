@@ -12,6 +12,7 @@ void read_file(string input_string);
 void printAST(struct Program *ast);
 void printGlobals(vector<Decl> prog_globs);
 void printDecl(Decl declaration);
+void printType(Type type);
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -113,9 +114,23 @@ void printDecl(Decl declaration) {
   std::cout << declaration.name;
   std::cout << ",";
 
-  /*
-   * TODO: Do recursive call to print declaration.type vals.
-   */
+  printType(*declaration.type);
 
   std::cout << ")"; // Closes Decl(
+}
+
+/*
+ * function: printDecl
+ *
+ * prints a single decl object
+ *
+ */
+void printType(Type type) {
+  if (type.kind == Type::TypeKind::Int) {
+    std::cout << "Int";
+  } else if (type.kind == Type::TypeKind::Ptr) {
+    std::cout << "Ptr(";
+    printType(*type.pointed_to_type);
+    std::cout << ")"; // closes Ptr(
+  }
 }
