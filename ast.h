@@ -40,10 +40,11 @@ int parse_decls(Program *ast);
 int parse_decl(Program *ast);
 int parse_type(Program *ast, Type *typeField);
 int parse_type_ad(Program *ast, Type *typeField);
-int parse_type_op(Program *ast);
-int parse_type_ar(Program *ast);
-int parse_rettyp(Program *ast);
-int parse_type_fp(Program *ast);
+int parse_type_op(Program *ast, std::vector<Type> *type_params,
+                  Type *fn_ret_type);
+int parse_type_ar(Program *ast, Type *prog_type);
+int parse_rettyp(Program *ast, Type *ret_type);
+int parse_type_fp(Program *ast, Type *ret_type);
 int runFunction(Program *ast);
 int runStruct(Program *ast);
 int runExtern(Program *ast);

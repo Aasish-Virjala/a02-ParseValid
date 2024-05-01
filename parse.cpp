@@ -14,6 +14,12 @@ void printGlobals(vector<Decl> prog_globs);
 void printDecl(Decl declaration);
 void printType(Type type);
 
+/*
+ * function: main
+ *
+ * main program driver
+ *
+ */
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     std::cerr << "usage: " << argv[0] << " <source_file>\n";
@@ -133,4 +139,5 @@ void printType(Type type) {
     printType(*type.pointed_to_type);
     std::cout << ")"; // closes Ptr(
   }
+  // TODO: handle printType for the other 2 fields of Type structs
 }

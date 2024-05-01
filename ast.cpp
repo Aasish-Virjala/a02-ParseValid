@@ -115,7 +115,6 @@ int parse_global(Program *ast) {
     // Consume "Semicolon"
     return END_OF_FILE;
   }
-  // TODO: Append this to the AST
 
   return NO_ERR;
 }
@@ -162,6 +161,7 @@ int parse_decls(Program *ast) {
  * function: parse_decl
  *
  * parse one decl
+ * appends it to the globals list here
  *
  */
 int parse_decl(Program *ast) {
@@ -315,12 +315,21 @@ int parse_type_ad(Program *ast, Type *typeField) {
     }
 
     // type_op
-    ret_val = parse_type_op(ast);
+    typeField->kind = Type::TypeKind::Fn;
+    std::vector<Type> type_params;
+    Type *type_fn_ret_type = new Type();
+    // This function will return the type_params and the ret_type that are
+    // stored
+    ret_val = parse_type_op(ast, &type_params, type_fn_ret_type);
+
     if (ret_val != NO_ERR) {
       std::cout << "ERR318" << std::endl;
       return ret_val;
     }
 
+    // Return success
+    typeField->params = type_params;        // Get params from recursive call
+    typeField->ret_type = type_fn_ret_type; // Get ret_type from recursive call
     return NO_ERR;
   }
 
@@ -336,7 +345,8 @@ int parse_type_ad(Program *ast, Type *typeField) {
  * type_op ::= `)` type_ar
  *          | type type_fp
  */
-int parse_type_op(Program *ast) {
+int parse_type_op(Program *ast, std::vector<Type> *type_params,
+                  Type *fn_ret_type) {
   std::cout << "In parse_type_op" << std::endl;
   int ret_val;
   std::string curr_token;
@@ -349,25 +359,25 @@ int parse_type_op(Program *ast) {
     }
 
     // type_ar
-    ret_val = parse_type_ar(ast);
+    ret_val = parse_type_ar(ast, fn_ret_type);
     if (ret_val != NO_ERR) {
       std::cout << "ERR352" << std::endl;
       return ret_val;
     }
 
+    // End of recursive call
     return NO_ERR;
   }
 
   // type type_fp
   else {
-    struct Type *TEMP_type = nullptr;
-    ret_val = parse_type(ast, TEMP_type);
+    ret_val = parse_type(ast, fn_ret_type);
     if (ret_val != NO_ERR) {
       std::cout << "ERR364" << std::endl;
       return ret_val;
     }
 
-    ret_val = parse_type_fp(ast);
+    ret_val = parse_type_fp(ast, fn_ret_type);
     if (ret_val != NO_ERR) {
       std::cout << "ERR370" << std::endl;
       return ret_val;
@@ -384,7 +394,7 @@ int parse_type_op(Program *ast) {
  *
  * type_ar ::= `->` rettyp
  */
-int parse_type_ar(Program *ast) {
+int parse_type_ar(Program *ast, Type *ret_type) {
   std::cout << "In parse_type_ar" << std::endl;
   int ret_val;
   std::string curr_token;
@@ -398,7 +408,7 @@ int parse_type_ar(Program *ast) {
     }
 
     // rettyp
-    ret_val = parse_rettyp(ast);
+    ret_val = parse_rettyp(ast, ret_type);
     if (ret_val != NO_ERR) {
       std::cout << "ERR401" << std::endl;
       return ret_val;
@@ -419,7 +429,7 @@ int parse_type_ar(Program *ast) {
  * rettyp ::= type
  *          | `_`
  */
-int parse_rettyp(Program *ast) {
+int parse_rettyp(Program *ast, Type *ret_type) {
   std::cout << "In parse_rettyp" << std::endl;
   int ret_val;
   std::string curr_token;
@@ -427,15 +437,15 @@ int parse_rettyp(Program *ast) {
 
   // type
   int orig_index = parsing_index;
-  struct Type *TEMP_type;
-  ret_val = parse_type(ast, TEMP_type);
+  ret_val = parse_type(ast, ret_type);
   if (ret_val == NO_ERR) {
     return NO_ERR;
   }
 
   // '_'
   else if (tokens[orig_index] == "Underscore") {
-    // TODO: Append the underscore
+    // Set the value of ret_type to null, this signifies empty
+    ret_type = nullptr;
     parsing_index = orig_index; // resetting the parsing_index global
     if (!checkValidIndex()) {
       // Consume "Underscore"
@@ -458,12 +468,13 @@ int parse_rettyp(Program *ast) {
  * type_fp ::= `)` type_ar?
  *         | (`,` type)+ `)` type_ar
  */
-int parse_type_fp(Program *ast) {
+int parse_type_fp(Program *ast, Type *ret_type) {
   std::cout << "In parse_type_fp" << std::endl;
   int ret_val;
   std::string curr_token;
 
   curr_token = tokens[parsing_index];
+  Type old_ret_type = *ret_type;
   // ')' type_ar?
   if (curr_token == "CloseParen") {
     if (!checkValidIndex()) {
@@ -473,12 +484,13 @@ int parse_type_fp(Program *ast) {
 
     // type_ar?
     int prev_index = parsing_index;
-    ret_val = parse_type_ar(ast);
+    ret_val = parse_type_ar(ast, ret_type); // TODO: FIX
     if (ret_val != NO_ERR) {
       // Reset parsing index in the case that type_ar fails
       // Not an error, ? allows for 1 or 0 instances
+      // Not an error, ? allows for 1 or 0 instances
       parsing_index = prev_index;
-      // TODO: DISCARD EVERYTHING THAT WAS ADDED FROM parse_type_ar call
+      // TODO: Undo anything that was appended in prev function call
     }
 
     return NO_ERR;
