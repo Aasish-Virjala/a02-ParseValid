@@ -1,20 +1,20 @@
 # LL(1) cflat grammar
 
 # cflat types; `&` is right-associative.
-   type ::= `&`* type_ad
-type_ad ::= `int`
-          | id
-          | `(` type_op
-type_op ::= `)` type_ar
-          | type type_fp
-type_fp ::= `)` type_ar?
-          | (`,` type)+ `)` type_ar
-type_ar ::= `->` rettyp
+   type ::= `&`* type_ad  // Completed
+type_ad ::= `int          // Completed`
+          | id            // Completed
+          | `(` type_op   // Completed 
+type_op ::= `)` type_ar   // Completed 
+          | type type_fp  // Completed
+type_fp ::= `)` type_ar?            // Completed
+          | (`,` type)+ `)` type_ar // Completed
+type_ar ::= `->` rettyp   // Completed
 
 # function type (used in extern declarations).
 funtype ::= `(` (type (`,` type)*)? `)` `->` rettyp
- rettyp ::= type 
-          | `_`
+ rettyp ::= type  // Completed
+          | `_`   // Completed
 
 # cflat program.
  program ::= toplevel+

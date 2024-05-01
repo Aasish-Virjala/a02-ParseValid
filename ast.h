@@ -44,7 +44,8 @@ int parse_type_op(Program *ast, std::vector<Type> *type_params,
                   Type *fn_ret_type);
 int parse_type_ar(Program *ast, Type *prog_type);
 int parse_rettyp(Program *ast, Type *ret_type);
-int parse_type_fp(Program *ast, Type *ret_type);
+int parse_type_fp(Program *ast, Type *func_ret_type,
+                  std::vector<Type> *param_types);
 int runFunction(Program *ast);
 int runStruct(Program *ast);
 int runExtern(Program *ast);
@@ -60,7 +61,7 @@ bool checkValidIndex();
  *
  */
 struct Type {
-  enum class TypeKind { Int, Struct, Fn, Ptr };
+  enum class TypeKind { Int, Struct, Fn, Ptr, NulPtr };
   TypeKind kind;
   std::string struct_name;
   std::vector<Type> params;
@@ -69,24 +70,26 @@ struct Type {
 
   // Int constructor
   Type() : ret_type(nullptr), pointed_to_type(nullptr) {}
-  // Type() : kind(TypeKind::Int) {}
 
-  // Struct constructor
-  // Type(const StructId &name) : kind(TypeKind::Struct), struct_name(name) {}
-  //
-  // Fn constructor
-  // Type(const std::vector<Type> &params, const Type &ret_type)
-  //     : kind(TypeKind::Fn), params(params), ret_type(new Type(ret_type)) {}
-
-  // Ptr constructor
-  // Type(const Type *in_pointed_to_type)
-  //     : kind(TypeKind::Ptr), pointed_to_type(in_pointed_to_type) {}
-
-  // Destructor for memory cleanup from new calls
-  // ~Type() {
-  //   delete ret_type;
-  //   delete pointed_to_type;
-  // }
+  /*
+   * Fields:
+   *
+   * kind = Int
+   * kind
+   *
+   * kind = Struct
+   * kind
+   * struct_name
+   *
+   * kind = Fn
+   * kind
+   * params
+   * ret_type
+   *
+   * kind - Ptr
+   * kind
+   * pointed_to_type
+   */
 };
 
 /*

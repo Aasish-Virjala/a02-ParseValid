@@ -2,7 +2,13 @@ Let
 Id(sum)
 Colon
 Address
+OpenParen
 Int
+Comma
+Int
+CloseParen
+Arrow
+Underscore
 Semicolon
 Let
 Id(sum)

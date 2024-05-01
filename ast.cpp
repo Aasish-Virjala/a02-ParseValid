@@ -26,11 +26,6 @@ struct Program *initialize_ast() {
  */
 int create_ast(Program *ast) {
 
-  std::cout << "Globals: " << ast->globals.size()
-            << "\nStructs: " << ast->structs.size()
-            << "\nExterns: " << ast->externs.size()
-            << "\nFunctions: " << ast->functions.size() << std::endl;
-
   parsing_index = 0;
   int err = NO_ERR;
   std::string token;
@@ -97,7 +92,7 @@ int create_ast(Program *ast) {
  * glob ::= `let` decls `;`
  */
 int parse_global(Program *ast) {
-  std::cout << "In parse_global" << std::endl;
+  std::cout << "funct: parse_global" << std::endl;
   // 'let' was handled previously
   int ret_val;
   std::string curr_token;
@@ -127,7 +122,7 @@ int parse_global(Program *ast) {
  * decls ::= decl (`,` decl)*
  */
 int parse_decls(Program *ast) {
-  std::cout << "In parse_decls" << std::endl;
+  std::cout << "funct: parse_decls" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -165,7 +160,7 @@ int parse_decls(Program *ast) {
  *
  */
 int parse_decl(Program *ast) {
-  std::cout << "In parse_decl" << std::endl;
+  std::cout << "funct: parse_decl" << std::endl;
   // id
   std::string token = tokens[parsing_index];
 
@@ -220,7 +215,7 @@ int parse_decl(Program *ast) {
  *  type ::= `&`* type_ad
  */
 int parse_type(Program *ast, Type *typeField) {
-  std::cout << "In parse_type" << std::endl;
+  std::cout << "funct: parse_type" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -273,7 +268,7 @@ int parse_type(Program *ast, Type *typeField) {
  *         | `(` type_op
  */
 int parse_type_ad(Program *ast, Type *typeField) {
-  std::cout << "In parse_type_ad" << std::endl;
+  std::cout << "funct: parse_type_ad" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -347,10 +342,11 @@ int parse_type_ad(Program *ast, Type *typeField) {
  */
 int parse_type_op(Program *ast, std::vector<Type> *type_params,
                   Type *fn_ret_type) {
-  std::cout << "In parse_type_op" << std::endl;
+  std::cout << "funct: parse_type_op" << std::endl;
   int ret_val;
   std::string curr_token;
 
+  curr_token = tokens[parsing_index];
   // ')' type_ar
   if (curr_token == "CloseParen") {
     if (!checkValidIndex()) {
@@ -371,13 +367,16 @@ int parse_type_op(Program *ast, std::vector<Type> *type_params,
 
   // type type_fp
   else {
-    ret_val = parse_type(ast, fn_ret_type);
+    struct Type *newestType = new Type();
+    ret_val = parse_type(ast, newestType);
     if (ret_val != NO_ERR) {
       std::cout << "ERR364" << std::endl;
       return ret_val;
     }
+    std::cout << "YEA pushed one int" << std::endl;
+    type_params->push_back(*newestType);
 
-    ret_val = parse_type_fp(ast, fn_ret_type);
+    ret_val = parse_type_fp(ast, fn_ret_type, type_params);
     if (ret_val != NO_ERR) {
       std::cout << "ERR370" << std::endl;
       return ret_val;
@@ -395,7 +394,7 @@ int parse_type_op(Program *ast, std::vector<Type> *type_params,
  * type_ar ::= `->` rettyp
  */
 int parse_type_ar(Program *ast, Type *ret_type) {
-  std::cout << "In parse_type_ar" << std::endl;
+  std::cout << "funct: parse_type_ar" << std::endl;
   int ret_val;
   std::string curr_token;
 
@@ -407,6 +406,7 @@ int parse_type_ar(Program *ast, Type *ret_type) {
       return -1;
     }
 
+    // RETURN 01
     // rettyp
     ret_val = parse_rettyp(ast, ret_type);
     if (ret_val != NO_ERR) {
@@ -430,7 +430,7 @@ int parse_type_ar(Program *ast, Type *ret_type) {
  *          | `_`
  */
 int parse_rettyp(Program *ast, Type *ret_type) {
-  std::cout << "In parse_rettyp" << std::endl;
+  std::cout << "funct: parse_rettyp" << std::endl;
   int ret_val;
   std::string curr_token;
   curr_token = tokens[parsing_index];
@@ -468,13 +468,14 @@ int parse_rettyp(Program *ast, Type *ret_type) {
  * type_fp ::= `)` type_ar?
  *         | (`,` type)+ `)` type_ar
  */
-int parse_type_fp(Program *ast, Type *ret_type) {
-  std::cout << "In parse_type_fp" << std::endl;
+int parse_type_fp(Program *ast, Type *func_ret_type,
+                  std::vector<Type> *param_types) {
+  std::cout << "funct: parse_type_fp" << std::endl;
   int ret_val;
   std::string curr_token;
 
   curr_token = tokens[parsing_index];
-  Type old_ret_type = *ret_type;
+  Type old_ret_type = *func_ret_type;
   // ')' type_ar?
   if (curr_token == "CloseParen") {
     if (!checkValidIndex()) {
@@ -484,13 +485,14 @@ int parse_type_fp(Program *ast, Type *ret_type) {
 
     // type_ar?
     int prev_index = parsing_index;
-    ret_val = parse_type_ar(ast, ret_type); // TODO: FIX
+    ret_val = parse_type_ar(ast, func_ret_type); // TODO: FIX
     if (ret_val != NO_ERR) {
       // Reset parsing index in the case that type_ar fails
       // Not an error, ? allows for 1 or 0 instances
-      // Not an error, ? allows for 1 or 0 instances
+      // this is resetting the ret_type value to undo anything from the function
+      // call
       parsing_index = prev_index;
-      // TODO: Undo anything that was appended in prev function call
+      func_ret_type->kind = Type::TypeKind::NulPtr;
     }
 
     return NO_ERR;
@@ -507,11 +509,15 @@ int parse_type_fp(Program *ast, Type *ret_type) {
       return -1;
     }
 
-    struct Type *TEMP_type = nullptr;
-    ret_val = parse_type(ast, TEMP_type);
+    struct Type *currentType = new Type();
+    ret_val = parse_type(ast, currentType);
     if (ret_val != NO_ERR) {
       return ret_val;
     }
+
+    std::cout << "YEA pushed one int" << std::endl;
+    param_types->push_back(*currentType);
+    delete currentType;
 
     // (',' type)+   (essentially star operator)
     while (1) {
@@ -524,11 +530,14 @@ int parse_type_fp(Program *ast, Type *ret_type) {
         return -1;
       }
 
+      currentType = new Type();
       // Invalid type parse means error.
-      ret_val = parse_type(ast, TEMP_type);
+      ret_val = parse_type(ast, currentType);
       if (ret_val != NO_ERR) {
         return ret_val;
       }
+      param_types->push_back(*currentType);
+      delete currentType;
     }
 
     // ')'
@@ -537,13 +546,13 @@ int parse_type_fp(Program *ast, Type *ret_type) {
       return parsing_index;
     }
     if (!checkValidIndex()) {
-      // Comeume "CloseParen"
+      // Consume "CloseParen"
       return -1;
     }
 
     // type_ar
     curr_token = tokens[parsing_index];
-    ret_val = parse_type_ar(ast);
+    ret_val = parse_type_ar(ast, func_ret_type);
     if (ret_val != NO_ERR) {
       return ret_val;
     }
@@ -554,82 +563,6 @@ int parse_type_fp(Program *ast, Type *ret_type) {
 
 int runFunction(Program *ast) {
   // Figure out if function is okay
-  //
-  // /* START handling decl */
-  // std::string token = tokens[parsing_index];
-  // if (token.substr(0, 3) != "Id(") {
-  //   return parsing_index;
-  // }
-  // std::string functionName = token.substr(3, token.length() - 4);
-  //
-  // if (!checkValidIndex()) {
-  //   // Consume "Id([...])"
-  //   return -1;
-  // }
-  //
-  // token = tokens[parsing_index];
-  // if (token != "Colon") {
-  //   return parsing_index;
-  // }
-  // if (!checkValidIndex()) {
-  //   // Consume "Colon"
-  //   return -1;
-  // }
-  //
-  // int ret_val = check_type();
-  // if (ret_val != NO_ERR) {
-  //   return ret_val;
-  // }
-  //
-  // // HANDLE PARAMETERS HERE
-  // std::vector<Decl> parameters;
-  // while (tokens[index] != "CloseParen") {
-  //   if (tokens[index].substr(0, 3) == "Id(") {
-  //     std::string paramName =
-  //         tokens[index].substr(3, tokens[index].length() - 4);
-  //     index++; // Move past parameter name
-  //     if (tokens[index] != "Colon")
-  //       return index;
-  //     index++; // Move past ':'
-  //     if (tokens[index] != "Int" && tokens[index] != "Address")
-  //       return index; // Assume only Int and Address types for simplicity
-  //     // struct Type paramType = (tokens[index] == "Int") ?
-  //     // Type(Type::TypeKind::Int) : Type(Type::TypeKind::Ptr);
-  //     // parameters.push_back(Decl(paramName, &paramType));
-  //     index++; // Move past type
-  //     if (tokens[index] == "Comma")
-  //       index++; // Move past ',' if more parameters follow
-  //   } else {
-  //     return index; // Unexpected token
-  //   }
-  // }
-  // index++; // Move past ')'
-  //
-  // if (tokens[index] != "CloseParen")
-  //   return index;
-  // index++; // Move past ')'
-  //
-  // // Check for arrow indicating return type
-  // if (tokens[index] != "Arrow")
-  //   return index;
-  // index++; // Move past '->'
-  // if (tokens[index] != "Int" && tokens[index] != "Struct" &&
-  //     tokens[index] != "Fn" && tokens[index] != "Ptr")
-  //   return index;
-  // index++;
-  // if (tokens[index] != "OpenBrace")
-  //   return index;
-  // index++;
-  // int openBraceCount = 1;
-  // while (tokens[index] != "CloseBrace") {
-  //   // Fetch next token and figure out what to do with it
-  //
-  //   index++;
-  // }
-  // // Eventually, add the function to the AST
-  // Function newFunction;
-  // newFunction.name = functionName;
-  // ast->functions.push_back(newFunction);
 
   return NO_ERR;
 }
@@ -646,78 +579,12 @@ int runExtern(Program *ast) {
   return NO_ERR;
 }
 
-/*
-checkValidType(){
-  // check '&'*
-  checkValidType_ad();
-}
-
-checkValidType_ad(){
-  if(tokenInt == TOKEN_OK) return; // checking 'int'
-  else if(token == '('){ // checking ()
-    checkType_op(nextToken);
-  }
-  else{ // checking id
-    if(itsId()){
-      return good;
-    }
-
-  }
-  return currenToken?
-}
-
-checkType_op(){
-  if(token == CloseParen){
-    checkType_ar(nextToken);
-  }
-  else{
-    checkType(token)
-    checkType_fp(nextToken)
-
-  }
-}
-
-checkType_fp() {
-  if(token == closeParen){
-    check(type_ar)?;
-  }
-  else{
-    // see if there is ',' followed by type
-    // else error
-
-    // then see if there is ',' followed by type star
-
-    // check for ')' else error
-
-    checkType_ar(nextToken);
-  }
-}
-
-checkType_ar(){
-  if(token == arrow){
-    checkRettyp(nextToken);
-  }
-  return currenToken; // error
-}
-
-checkRetTyp(){
-  if(checkType() == TOKEN_OK){
-    return TOKEN_OK
-  }
-  else{
-    if(token == "Underscore"){
-      return TOKEN_OK
-    }
-  }
-}
-
-
-*/
-
 bool checkValidIndex() {
   parsing_index++;
   if (parsing_index >= tokens.size()) {
     return false;
   }
+  std::cout << "Consumed token " << parsing_index - 1 << ", "
+            << tokens[parsing_index - 1] << std::endl;
   return true;
 }

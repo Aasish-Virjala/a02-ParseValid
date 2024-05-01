@@ -13,6 +13,7 @@ void printAST(struct Program *ast);
 void printGlobals(vector<Decl> prog_globs);
 void printDecl(Decl declaration);
 void printType(Type type);
+void printFn(std::vector<Type> parameters, Type *return_type);
 
 /*
  * function: main
@@ -87,6 +88,7 @@ void printAST(struct Program *ast) {
 
   // Printing Globals
   std::cout << "globals = [";
+  std::cout.flush();
   printGlobals(ast->globals);
   std::cout << "]," << std::endl;
 
@@ -116,9 +118,10 @@ void printGlobals(vector<Decl> prog_globs) {
  *
  */
 void printDecl(Decl declaration) {
+
   std::cout << "Decl(";
   std::cout << declaration.name;
-  std::cout << ",";
+  std::cout << ", ";
 
   printType(*declaration.type);
 
@@ -132,12 +135,51 @@ void printDecl(Decl declaration) {
  *
  */
 void printType(Type type) {
-  if (type.kind == Type::TypeKind::Int) {
+
+  // Printing NulPtr
+  if (type.kind == Type::TypeKind::NulPtr) {
+    std::cout << "_";
+  }
+
+  // Printing Int
+  else if (type.kind == Type::TypeKind::Int) {
     std::cout << "Int";
-  } else if (type.kind == Type::TypeKind::Ptr) {
+  }
+
+  // Printing Ptr Type
+  else if (type.kind == Type::TypeKind::Ptr) {
     std::cout << "Ptr(";
     printType(*type.pointed_to_type);
     std::cout << ")"; // closes Ptr(
   }
-  // TODO: handle printType for the other 2 fields of Type structs
+
+  // Printing Fn Type
+  else if (type.kind == Type::TypeKind::Fn) {
+    std::cout << "Fn(";
+    printFn(type.params, type.ret_type);
+    std::cout << ")"; // closes Fn(
+  }
+
+  // Printing Struct Type
+  else if (type.kind == Type::TypeKind::Struct) {
+    std::cout << "Struct(";
+
+    std::cout << ")"; // Closes Struct(
+  }
+}
+
+void printFn(std::vector<Type> parameters, Type *return_type) {
+  std::cout << "prms = [";
+  if (parameters.size() >= 0) {
+    printType(parameters[0]);
+  }
+  for (int i = 1; i < parameters.size(); i++) {
+    printType(parameters[i]);
+  }
+  std::cout << "], ret = "; // Closes prms = [
+  if (return_type == nullptr) {
+    std::cout << "_";
+    return;
+  }
+  printType(*return_type);
 }
